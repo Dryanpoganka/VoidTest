@@ -36,21 +36,38 @@ export function ProjectBuilder() {
   const [selectedServices, setSelectedServices] = useState<ServiceItem[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<number | "">("");
   const [quantity, setQuantity] = useState<number>(1);
-
+  const [error, setError] = useState<string | null>(null);
   let totalPrice = 0;
   for (const item of selectedServices) {
     totalPrice += item.service.price * item.quantity;
   }
 
   function addService() {
+    if (quantity < 1 || quantity > 10) {
+      setError("Количество должно быть от 1 до 10");
+      return;
+    }
+    setError(null);
     const service = availableServices.find((s) => s.id === selectedServiceId);
     if (!service) return;
 
-    const existing = selectedServices.find((item) => item.service === service);
+    const existing = selectedServices.find(
+      (item) => item.service.id === service.id,
+    );
     if (existing) {
-      existing.quantity += quantity;
+      setSelectedServices((prev) =>
+        prev.map((item) =>
+          item.service.id === service.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item,
+        ),
+      );
+      setSelectedServiceId("");
+      setQuantity(1);
     } else {
       setSelectedServices((prev) => [...prev, { service, quantity }]);
+      setSelectedServiceId("");
+      setQuantity(1);
     }
   }
 
@@ -68,7 +85,9 @@ export function ProjectBuilder() {
         style={{ maxWidth: 700, margin: "0 auto", fontFamily: "sans-serif" }}
       >
         <h2>Состав проекта</h2>
-
+        {error && (
+          <p style={{ color: "red", fontSize: 12, marginLeft: 8 }}>{error}</p>
+        )}
         <div
           className="add-service"
           style={{
